@@ -1,0 +1,38 @@
+name: Build Windows (Flutter)
+
+on:
+  push:
+    branches: [ main ]   # 如用別的分支，改這裡
+  workflow_dispatch: {}  # 支援手動觸發
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Pub get
+        run: flutter pub get
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Zip runner/Release
+        run: |
+          cd build\windows\x64\runner\Release
+          powershell Compress-Archive -Path * -DestinationPath app-windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-windows
+          path: build/windows/x64/runner/Release/app-windows.zip
